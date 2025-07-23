@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Toaster } from 'react-hot-toast';
+
+// Force fresh build - all TypeScript errors should be resolved
 import Header from './components/Header';
 import InputBar from './components/InputBar';
 import GraphCanvas from './components/GraphCanvas';
