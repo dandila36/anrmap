@@ -123,6 +123,7 @@ function App() {
             isOpen={isDrawerOpen}
             onClose={() => setIsDrawerOpen(false)}
             onExpand={handleExpandNode}
+            graphData={graphData}
           />
         </div>
       </div>

@@ -157,6 +157,7 @@ export interface SideDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onExpand: (artistName: string) => void;
+  graphData?: GraphData; // Add graph data for network analysis
 }
 
 export interface ToolbarProps {
