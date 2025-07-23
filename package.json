@@ -10,7 +10,8 @@
     "build": "cd frontend && npm install && npm run build",
     "start": "cd backend && npm start",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
-    "vercel-build": "cd frontend && npm install && npm run build"
+    "vercel-build": "cd frontend && npm install && npm run build",
+    "postinstall": "cd backend && npm install && cd ../frontend && npm install"
   },
   "keywords": ["lastfm", "music", "visualization", "graph", "similarity"],
   "author": "dandila36",

@@ -3,9 +3,18 @@ const fastify = require('fastify')({
   logger: true 
 });
 
+// Configure allowed origins for CORS
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+  ? [
+      process.env.FRONTEND_URL || 'https://nodemap.vercel.app',
+      /\.vercel\.app$/,
+      /\.vercel\.com$/
+    ]
+  : ['http://localhost:5173', 'http://localhost:3000'];
+
 // Register plugins
 fastify.register(require('@fastify/cors'), {
-  origin: ['http://localhost:5173', 'http://localhost:3000'], // Vite dev server
+  origin: allowedOrigins,
   credentials: true
 });
 
@@ -30,13 +39,8 @@ fastify.register(require('@fastify/rate-limit'), {
 //   });
 // }
 
-// Register static file serving for production
-if (process.env.NODE_ENV === 'production') {
-  fastify.register(require('@fastify/static'), {
-    root: require('path').join(__dirname, '../public'),
-    prefix: '/'
-  });
-}
+// Static file serving removed for Vercel compatibility
+// Vercel handles static files through CDN, not the serverless function
 
 // Register Last.fm service directly
 console.log('🔧 Starting service registration...');
