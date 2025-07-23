@@ -141,7 +141,7 @@ const ListView: React.FC<ListViewProps> = ({ data, onArtistSelect }) => {
             </tr>
           </thead>
           <tbody>
-            {sortedArtists.map((artist, index) => (
+            {sortedArtists.map((artist) => (
               <tr
                 key={artist.id}
                 className={`border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${

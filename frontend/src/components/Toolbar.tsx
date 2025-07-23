@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Settings, Download, FileText, Image, Filter, Sliders, Grid3X3, List } from 'lucide-react';
+import { Download, FileText, Image, Filter, Sliders, Grid3X3, List } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { ToolbarProps } from '../types';
 import { apiService, downloadBlob } from '../services/api';
@@ -8,7 +8,6 @@ import html2canvas from 'html2canvas';
 const Toolbar: React.FC<ToolbarProps> = ({ 
   filters, 
   onFiltersChange, 
-  onExport, 
   graphData, 
   viewMode = 'graph', 
   onViewModeChange 

@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import cytoscape from 'cytoscape';
+// @ts-ignore - cytoscape-cose-bilkent doesn't have types
 import coseBilkent from 'cytoscape-cose-bilkent';
-import { GraphCanvasProps, ArtistNode, CytoscapeElements } from '../types';
+import { GraphCanvasProps, CytoscapeElements } from '../types';
 
 // Register the layout
 cytoscape.use(coseBilkent);
@@ -185,7 +186,6 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
       ],
       layout: {
         name: 'cose-bilkent',
-        quality: 'default',
         nodeDimensionsIncludeLabels: true,
         refresh: 20,
         fit: true,
@@ -285,7 +285,6 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
     if (elements.length > 0) {
       cyRef.current.layout({
         name: 'cose-bilkent',
-        quality: 'default',
         nodeDimensionsIncludeLabels: true,
         refresh: 20,
         fit: true,

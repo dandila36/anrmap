@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
 import InputBar from './components/InputBar';
@@ -6,7 +6,7 @@ import GraphCanvas from './components/GraphCanvas';
 import ListView from './components/ListView';
 import SideDrawer from './components/SideDrawer';
 import Toolbar from './components/Toolbar';
-import { ArtistNode, ArtistEdge, GraphData, FilterState } from './types';
+import { ArtistNode, GraphData, FilterState } from './types';
 
 function App() {
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], edges: [] });
