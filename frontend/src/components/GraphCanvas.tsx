@@ -186,12 +186,8 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
       ],
       layout: {
         name: 'cose-bilkent',
-        nodeDimensionsIncludeLabels: true,
-        refresh: 20,
         fit: true,
         padding: 30,
-        randomize: false,
-        nodeRepulsion: 4500,
         idealEdgeLength: 50,
         edgeElasticity: 0.45,
         nestingFactor: 0.1,
@@ -202,7 +198,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
         animationDuration: 1000,
         tilingPaddingVertical: 10,
         tilingPaddingHorizontal: 10
-      },
+      } as any,
       wheelSensitivity: 0.2,
       minZoom: 0.3,
       maxZoom: 3
@@ -299,7 +295,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
         tile: true,
         animate: 'end',
         animationDuration: 1000
-      }).run();
+      } as any).run();
     }
   }, [data, transformDataToCytoscape]);
 
