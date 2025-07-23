@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # Redis cache (optional but recommended)
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Backend API
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - LASTFM_API_KEY=423aa870fa4e446dc60009d8e771c99b
+      - LASTFM_SHARED_SECRET=4516df5d818c1d8e21ba545e35a45ddf
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./backend:/app/backend
+      - /app/backend/node_modules
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # Frontend (Vite dev server)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3001/api
+    volumes:
+      - ./frontend:/app/frontend
+      - /app/frontend/node_modules
+    restart: unless-stopped
+
+volumes:
+  redis_data: 

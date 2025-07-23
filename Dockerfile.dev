@@ -1,0 +1,20 @@
+FROM node:18-alpine
+
+# Install dumb-init
+RUN apk add --no-cache dumb-init
+
+# Set working directory
+WORKDIR /app
+
+# Copy backend package files
+COPY backend/package*.json ./backend/
+RUN cd backend && npm install
+
+# Copy backend source
+COPY backend/ ./backend/
+
+# Expose port
+EXPOSE 3001
+
+# Start with nodemon for development
+CMD ["dumb-init", "npm", "run", "dev", "--prefix", "backend"] 
