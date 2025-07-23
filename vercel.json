@@ -1,12 +1,13 @@
 {
+  "version": 2,
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
-  "framework": "vite",
-  "functions": {
-    "backend/src/index.js": {
-      "maxDuration": 30
+  "builds": [
+    {
+      "src": "backend/src/index.js",
+      "use": "@vercel/node"
     }
-  },
+  ],
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -14,7 +15,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/$1"
+      "destination": "/index.html"
     }
   ]
 } 
