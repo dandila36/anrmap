@@ -139,12 +139,14 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
             'label': 'data(name)',
             'text-valign': 'bottom',
             'text-halign': 'center',
-            'text-margin-y': 5,
+            'text-margin-y': 8,
             'font-size': '12px',
             'font-weight': 'bold',
             'color': '#333',
             'text-outline-color': '#fff',
             'text-outline-width': 2,
+            'text-wrap': 'ellipsis',
+            'text-max-width': '80px',
             'border-width': (node: any) => node.data('isRoot') ? 4 : 2,
             'border-color': (node: any) => node.data('isRoot') ? '#FFD700' : '#fff',
             'overlay-opacity': 0
@@ -187,8 +189,8 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
       layout: {
         name: 'cose-bilkent',
         fit: true,
-        padding: 30,
-        idealEdgeLength: 50,
+        padding: 60,
+        idealEdgeLength: 120,
         edgeElasticity: 0.45,
         nestingFactor: 0.1,
         gravity: 0.25,
@@ -196,8 +198,10 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
         tile: true,
         animate: 'end',
         animationDuration: 1000,
-        tilingPaddingVertical: 10,
-        tilingPaddingHorizontal: 10
+        tilingPaddingVertical: 25,
+        tilingPaddingHorizontal: 25,
+        nodeRepulsion: 8000,
+        nodeDimensionsIncludeLabels: true
       } as any,
       wheelSensitivity: 0.2,
       minZoom: 0.3,
@@ -284,17 +288,19 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
         nodeDimensionsIncludeLabels: true,
         refresh: 20,
         fit: true,
-        padding: 30,
+        padding: 60,
         randomize: false,
-        nodeRepulsion: 4500,
-        idealEdgeLength: 50,
+        nodeRepulsion: 8000,
+        idealEdgeLength: 120,
         edgeElasticity: 0.45,
         nestingFactor: 0.1,
         gravity: 0.25,
         numIter: 2500,
         tile: true,
         animate: 'end',
-        animationDuration: 1000
+        animationDuration: 1000,
+        tilingPaddingVertical: 25,
+        tilingPaddingHorizontal: 25
       } as any).run();
     }
   }, [data, transformDataToCytoscape]);
