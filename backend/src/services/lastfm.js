@@ -170,7 +170,7 @@ class LastFmService {
         playcount: parseInt(artist.stats?.playcount || 0),
         url: artist.url,
         image: artist.image?.[3]?.['#text'] || '',
-        bio: artist.bio?.summary || '',
+        bio: artist.bio?.content || artist.bio?.summary || '',
         tags: artist.tags?.tag?.slice(0, 5).map(tag => tag.name) || []
       };
 
