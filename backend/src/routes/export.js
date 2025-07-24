@@ -28,7 +28,7 @@ async function exportRoutes(fastify, options) {
       
       reply
         .header('Content-Type', 'text/csv')
-        .header('Content-Disposition', `attachment; filename="similar-artists-${rootArtistName.replace(/[^a-zA-Z0-9]/g, '-')}.csv"`)
+        .header('Content-Disposition', `attachment; filename="artist-network-${rootArtistName.replace(/[^a-zA-Z0-9]/g, '-')}.csv"`)
         .send(csvData);
         
     } catch (error) {
@@ -69,7 +69,7 @@ async function exportRoutes(fastify, options) {
       
       reply
         .header('Content-Type', 'text/csv')
-        .header('Content-Disposition', 'attachment; filename="artist-connections.csv"')
+        .header('Content-Disposition', 'attachment; filename="artist-network-export.csv"')
         .send(csvData);
         
     } catch (error) {
@@ -83,82 +83,140 @@ async function exportRoutes(fastify, options) {
   });
 }
 
-// Helper function to generate CSV from graph data
+// Helper function to generate CSV from graph data with new format
 function generateCSV(graph) {
   const lines = [];
   
-  // Header
-  lines.push('Type,Source,Target,Name,Listeners,Playcount,Match,Tags,URL');
+  // Header - Artist Name, Orbit, Listeners, Plays, Genres, Similarity To Root, URL
+  lines.push('Artist Name,Orbit,Listeners,Plays,Genres,Similarity To Root,URL');
   
-  // Add nodes
-  graph.nodes.forEach(node => {
-    const tags = (node.tags || []).join(';');
-    lines.push([
-      'Artist',
-      '',
-      '',
-      `"${node.name}"`,
-      node.listeners || 0,
-      node.playcount || 0,
-      '',
-      `"${tags}"`,
-      `"${node.url || ''}"`
-    ].join(','));
+  // Find root artist for similarity calculations
+  const rootArtist = graph.nodes.find(node => node.isRoot);
+  if (!rootArtist) {
+    throw new Error('No root artist found in graph data');
+  }
+  
+  // Create similarity lookup map from edges
+  const similarityMap = new Map();
+  graph.edges.forEach(edge => {
+    // If edge connects to root, store the similarity
+    if (edge.source === rootArtist.name) {
+      similarityMap.set(edge.target, edge.match);
+    } else if (edge.target === rootArtist.name) {
+      similarityMap.set(edge.source, edge.match);
+    }
   });
   
-  // Add edges
-  graph.edges.forEach(edge => {
+  // Process nodes and add to CSV
+  graph.nodes.forEach(node => {
+    // Determine orbit based on hopLevel
+    let orbit;
+    switch (node.hopLevel) {
+      case 0: orbit = 'Root'; break;
+      case 1: orbit = '1st Hop'; break;
+      case 2: orbit = '2nd Hop'; break;
+      default: orbit = 'Unknown'; break;
+    }
+    
+    // Format numbers with commas, no decimals
+    const formatNumber = (num) => {
+      if (!num || num === 0) return '0';
+      return Math.floor(num).toLocaleString();
+    };
+    
+    // Get similarity to root
+    let similarityToRoot = 0;
+    if (node.isRoot) {
+      similarityToRoot = 1.0; // Root has 100% similarity to itself
+    } else {
+      similarityToRoot = similarityMap.get(node.name) || 0;
+    }
+    
+    // Format similarity as percentage
+    const similarityPercent = `${Math.round(similarityToRoot * 100)}%`;
+    
+    // Format genres (tags)
+    const genres = (node.tags || []).join(', ');
+    
+    // Create CSV row
     lines.push([
-      'Connection',
-      `"${edge.source}"`,
-      `"${edge.target}"`,
-      '',
-      '',
-      '',
-      edge.match || 0,
-      '',
-      ''
+      `"${node.name}"`,
+      `"${orbit}"`,
+      `"${formatNumber(node.listeners)}"`,
+      `"${formatNumber(node.playcount)}"`,
+      `"${genres}"`,
+      `"${similarityPercent}"`,
+      `"${node.url || ''}"`
     ].join(','));
   });
   
   return lines.join('\n');
 }
 
-// Helper function to generate CSV from provided graph
+// Helper function to generate CSV from provided graph with new format
 function generateCSVFromGraph(graph) {
   const lines = [];
   
-  // Header
-  lines.push('Type,Source,Target,Name,Listeners,Playcount,Match,Tags,URL');
+  // Header - Artist Name, Orbit, Listeners, Plays, Genres, Similarity To Root, URL
+  lines.push('Artist Name,Orbit,Listeners,Plays,Genres,Similarity To Root,URL');
   
-  // Add nodes
-  graph.nodes.forEach(node => {
-    const tags = (node.tags || []).join(';');
-    lines.push([
-      'Artist',
-      '',
-      '',
-      `"${node.name}"`,
-      node.listeners || 0,
-      node.playcount || 0,
-      '',
-      `"${tags}"`,
-      `"${node.url || ''}"`
-    ].join(','));
+  // Find root artist for similarity calculations
+  const rootArtist = graph.nodes.find(node => node.isRoot);
+  if (!rootArtist) {
+    throw new Error('No root artist found in graph data');
+  }
+  
+  // Create similarity lookup map from edges
+  const similarityMap = new Map();
+  graph.edges.forEach(edge => {
+    // If edge connects to root, store the similarity
+    if (edge.source === rootArtist.name) {
+      similarityMap.set(edge.target, edge.match);
+    } else if (edge.target === rootArtist.name) {
+      similarityMap.set(edge.source, edge.match);
+    }
   });
   
-  // Add edges
-  graph.edges.forEach(edge => {
+  // Process nodes and add to CSV
+  graph.nodes.forEach(node => {
+    // Determine orbit based on hopLevel
+    let orbit;
+    switch (node.hopLevel) {
+      case 0: orbit = 'Root'; break;
+      case 1: orbit = '1st Hop'; break;
+      case 2: orbit = '2nd Hop'; break;
+      default: orbit = 'Unknown'; break;
+    }
+    
+    // Format numbers with commas, no decimals
+    const formatNumber = (num) => {
+      if (!num || num === 0) return '0';
+      return Math.floor(num).toLocaleString();
+    };
+    
+    // Get similarity to root
+    let similarityToRoot = 0;
+    if (node.isRoot) {
+      similarityToRoot = 1.0; // Root has 100% similarity to itself
+    } else {
+      similarityToRoot = similarityMap.get(node.name) || 0;
+    }
+    
+    // Format similarity as percentage
+    const similarityPercent = `${Math.round(similarityToRoot * 100)}%`;
+    
+    // Format genres (tags)
+    const genres = (node.tags || []).join(', ');
+    
+    // Create CSV row
     lines.push([
-      'Connection',
-      `"${edge.source}"`,
-      `"${edge.target}"`,
-      '',
-      '',
-      '',
-      edge.match || 0,
-      '',
-      ''
+      `"${node.name}"`,
+      `"${orbit}"`,
+      `"${formatNumber(node.listeners)}"`,
+      `"${formatNumber(node.playcount)}"`,
+      `"${genres}"`,
+      `"${similarityPercent}"`,
+      `"${node.url || ''}"`
     ].join(','));
   });
   
@@ -179,7 +237,7 @@ async function buildArtistGraph(rootArtistName, depth, limit, fastify) {
   ]);
   
   // Add root node
-  nodes.push(createArtistNode(rootInfo, true));
+  nodes.push(createArtistNode(rootInfo, true, 0));
   processedArtists.add(rootArtistName.toLowerCase());
   
   // Process first-hop similar artists
@@ -202,7 +260,7 @@ async function buildArtistGraph(rootArtistName, depth, limit, fastify) {
   // Add first-hop nodes and edges
   firstHopResults.forEach(({ info, similar }) => {
     if (!processedArtists.has(info.name.toLowerCase())) {
-      nodes.push(createArtistNode(info, false));
+      nodes.push(createArtistNode(info, false, 1));
       processedArtists.add(info.name.toLowerCase());
     }
     
@@ -218,7 +276,7 @@ async function buildArtistGraph(rootArtistName, depth, limit, fastify) {
   return { nodes, edges };
 }
 
-function createArtistNode(artistInfo, isRoot = false) {
+function createArtistNode(artistInfo, isRoot = false, hopLevel = 0) {
   const primaryGenre = artistInfo.tags?.[0] || 'unknown';
   const minSize = 20;
   const maxSize = 60;
@@ -236,7 +294,8 @@ function createArtistNode(artistInfo, isRoot = false) {
     tags: artistInfo.tags || [],
     primaryGenre,
     size,
-    isRoot
+    isRoot,
+    hopLevel
   };
 }
 
