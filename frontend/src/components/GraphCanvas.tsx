@@ -42,13 +42,18 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
     });
 
     // Add nodes
+    let filteredOutNodes = 0;
     graphData.nodes.forEach(node => {
       // Apply filters
       if (filters.selectedGenres.length > 0) {
         const hasMatchingGenre = node.tags.some(tag => 
           filters.selectedGenres.includes(tag.toLowerCase())
         );
-        if (!hasMatchingGenre && !node.isRoot) return;
+        if (!hasMatchingGenre && !node.isRoot) {
+          filteredOutNodes++;
+          console.log(`🔍 FILTERED OUT NODE: ${node.name} (hop:${node.hopLevel}) - no matching genre from:`, node.tags);
+          return;
+        }
       }
 
       elements.push({
@@ -103,6 +108,14 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
       skippedEdges,
       minSimilarity: filters.minSimilarity,
       finalElements: elements.length
+    });
+
+    console.log('🔍 FINAL ELEMENTS:', {
+      nodeCount: elements.filter(el => !el.data.source).length,
+      edgeCount: elements.filter(el => el.data.source).length,
+      filteredOutNodes,
+      nodeNames: elements.filter(el => !el.data.source).map(el => `${el.data.name} (hop:${el.data.hopLevel})`),
+      appliedFilters: filters
     });
 
     return elements;
