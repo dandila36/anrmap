@@ -6,15 +6,12 @@ import {
   Music,
   TrendingUp,
   Globe,
-  Heart,
   Star,
   Zap,
   Radio,
   Headphones,
   Award,
-  Target,
-  Share2,
-  BarChart3
+  Target
 } from 'lucide-react';
 import { SideDrawerProps } from '../types';
 
@@ -139,13 +136,13 @@ const SideDrawer: React.FC<SideDrawerProps> = ({ artist, isOpen, onClose, onExpa
         onClick={onClose}
       />
 
-      {/* Enhanced Drawer */}
-      <div className={`
-        fixed lg:relative top-0 right-0 h-full w-96 bg-white shadow-2xl z-50
-        transform transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
-        border-l border-gray-200
-      `}>
+             {/* Enhanced Drawer */}
+       <div className={`
+         fixed lg:relative top-0 right-0 h-full w-96 bg-white shadow-2xl z-50
+         transform transition-transform duration-300 ease-in-out
+         ${isOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+         border-l border-gray-200 flex flex-col
+       `}>
         {/* Header with Genre Theme */}
         <div 
           className="relative p-6 border-b border-gray-200"
@@ -170,8 +167,8 @@ const SideDrawer: React.FC<SideDrawerProps> = ({ artist, isOpen, onClose, onExpa
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+                 {/* Content */}
+         <div className="flex-1 overflow-y-auto min-h-0">
           {/* Artist Hero Section */}
           <div className="p-6 text-center">
             <div className="relative inline-block mb-4">
@@ -254,57 +251,54 @@ const SideDrawer: React.FC<SideDrawerProps> = ({ artist, isOpen, onClose, onExpa
             </div>
           </div>
 
-          {/* Network Analysis */}
-          {networkInsights && (
-            <div className="px-6 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
-                <BarChart3 className="w-5 h-5" />
-                <span>Network Position</span>
-              </h3>
-              
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <Share2 className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">Connections</span>
+          {/* Top Tracks */}
+          <div className="px-6 mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+              <TrendingUp className="w-5 h-5" />
+              <span>Top Tracks</span>
+            </h3>
+            <div className="space-y-3">
+              {/* Mock data for now - will be replaced with real API data later */}
+              {[1, 2, 3].map((index) => (
+                <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">{index}</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg font-bold text-gray-900">
-                      {networkInsights.connectionCount}
-                    </span>
-                    {networkInsights.isWellConnected && (
-                      <div className="w-2 h-2 bg-green-500 rounded-full" />
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <Heart className="w-4 h-4 text-red-500" />
-                    <span className="text-sm font-medium text-gray-700">Strong Matches</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg font-bold text-gray-900">
-                      {networkInsights.strongConnections}
-                    </span>
-                    {networkInsights.isInfluencer && (
-                      <Star className="w-4 h-4 text-yellow-500" />
-                    )}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-900 truncate">
+                      Popular Track {index}
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      {formatNumber(Math.floor(Math.random() * 1000000))} plays
+                    </p>
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
 
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <Radio className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-medium text-gray-700">Avg Similarity</span>
-                  </div>
-                  <span className="text-lg font-bold text-gray-900">
-                    {(networkInsights.avgSimilarity * 100).toFixed(0)}%
-                  </span>
+          {/* Latest Release */}
+          <div className="px-6 mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+              <Award className="w-5 h-5" />
+              <span>Latest Release</span>
+            </h3>
+            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
+                  <Music className="w-6 h-6 text-white" />
                 </div>
               </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-gray-900 truncate">
+                  Latest Album
+                </div>
+                <p className="text-xs text-gray-500">
+                  Recent release
+                </p>
+              </div>
             </div>
-          )}
+          </div>
 
           {/* Enhanced Genres */}
           {artist.tags && artist.tags.length > 0 && (
@@ -347,7 +341,7 @@ const SideDrawer: React.FC<SideDrawerProps> = ({ artist, isOpen, onClose, onExpa
                 <span>Biography</span>
               </h3>
               <div 
-                className="text-sm text-gray-600 leading-relaxed p-4 bg-gray-50 rounded-xl"
+                className="text-sm text-gray-600 leading-relaxed p-4 bg-gray-50 rounded-xl max-h-32 overflow-y-auto"
                 dangerouslySetInnerHTML={{ 
                   __html: artist.bio.replace(/<a[^>]*>/g, '').replace(/<\/a>/g, '') 
                 }}
