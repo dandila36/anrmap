@@ -11,7 +11,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000, // 30 seconds
+  timeout: 60000, // Increase to 60 seconds for complex graphs with root-relative similarity
   headers: {
     'Content-Type': 'application/json',
   },

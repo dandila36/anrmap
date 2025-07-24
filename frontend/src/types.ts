@@ -27,6 +27,7 @@ export interface ArtistNode {
   primaryGenre: string;
   size: number;
   isRoot: boolean;
+  hopLevel: number;
   topTracks?: Track[];
   topAlbums?: Album[];
   data?: {
@@ -37,6 +38,7 @@ export interface ArtistNode {
     primaryGenre: string;
     size: number;
     isRoot: boolean;
+    hopLevel: number;
   };
 }
 
@@ -136,6 +138,7 @@ export interface CytoscapeNode {
     primaryGenre: string;
     size: number;
     isRoot: boolean;
+    hopLevel: number;
   };
   position?: {
     x: number;

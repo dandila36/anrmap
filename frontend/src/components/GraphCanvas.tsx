@@ -18,34 +18,18 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
   const cyRef = useRef<cytoscape.Core | null>(null);
   const [isEmpty, setIsEmpty] = useState(true);
 
-  // Genre color mapping
-  const genreColors = {
-    pop: '#FF6B6B',
-    rock: '#4ECDC4',
-    'indie rock': '#45B7D1',
-    'alternative rock': '#96CEB4',
-    electronic: '#FECA57',
-    'indie pop': '#FF9FF3',
-    metal: '#54A0FF',
-    punk: '#5F27CD',
-    folk: '#00D2D3',
-    country: '#FF9F43',
-    blues: '#3742FA',
-    jazz: '#FF6348',
-    classical: '#2F3542',
-    hip: '#FF3838',
-    rap: '#FF4757',
-    rnb: '#3D9970',
-    soul: '#FF851B',
-    funk: '#B10DC9',
-    reggae: '#01A3A4',
-    default: '#6C7B7F'
-  };
 
-  const getNodeColor = useCallback((genre: string) => {
-    const normalizedGenre = genre.toLowerCase();
-    return genreColors[normalizedGenre as keyof typeof genreColors] || genreColors.default;
+
+  const getNodeColorByHop = useCallback((hopLevel: number) => {
+    switch (hopLevel) {
+      case 0: return '#2563EB'; // Blue for root
+      case 1: return '#DC2626'; // Red for 1st hop
+      case 2: return '#EAB308'; // Yellow for 2nd hop
+      default: return '#6C7B7F'; // Gray for unknown
+    }
   }, []);
+
+
 
   const transformDataToCytoscape = useCallback((graphData: typeof data): CytoscapeElements => {
     const elements: CytoscapeElements = [];
@@ -75,7 +59,8 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
           tags: node.tags,
           primaryGenre: node.primaryGenre,
           size: node.size,
-          isRoot: node.isRoot
+          isRoot: node.isRoot,
+          hopLevel: node.hopLevel
         }
       });
     });
@@ -135,7 +120,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
           style: {
             'width': 'data(size)',
             'height': 'data(size)',
-            'background-color': (node: any) => getNodeColor(node.data('primaryGenre')),
+            'background-color': (node: any) => getNodeColorByHop(node.data('hopLevel')),
             'label': 'data(name)',
             'text-valign': 'bottom',
             'text-halign': 'center',
@@ -203,9 +188,9 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
         nodeRepulsion: 8000,
         nodeDimensionsIncludeLabels: true
       } as any,
-      wheelSensitivity: 0.2,
-      minZoom: 0.3,
-      maxZoom: 3
+      wheelSensitivity: 0.8,
+      minZoom: 0.2,
+      maxZoom: 5
     });
 
     // Event handlers
@@ -258,7 +243,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
     });
 
     cyRef.current = cy;
-  }, [data, onNodeSelect, getNodeColor]);
+  }, [data, onNodeSelect, getNodeColorByHop]);
 
   // Initialize Cytoscape
   useEffect(() => {

@@ -97,13 +97,13 @@ async function mapRoutes(fastify, options) {
       const edges = [];
       
       // Add the center artist if not already present
-      nodes.push(createArtistNode(artistInfo, true));
+      nodes.push(createArtistNode(artistInfo, true, 0));
       
       // Add similar artists as nodes
       similarData.similar.forEach((similar, index) => {
         const info = artistInfos[index];
         if (!info.error) {
-          nodes.push(createArtistNode(info, false));
+          nodes.push(createArtistNode(info, false, 1));
           edges.push({
             id: `${artistName}->${similar.name}`,
             source: artistName,
@@ -139,104 +139,198 @@ async function mapRoutes(fastify, options) {
   });
 }
 
-// SIMPLE VERSION - ONLY ROOT + DIRECT CONNECTIONS
+// OPTIMIZED VERSION - PARALLEL PROCESSING + ROOT-RELATIVE SIMILARITY
 async function buildArtistGraph(rootArtistName, depth, limit, fastify) {
   console.log(`🔧 Building ${depth}-hop graph for "${rootArtistName}" with limit ${limit}`);
   
-  // Get root artist info and similar artists
+  // Get root artist info and similar artists (larger list for 2nd hop lookups)
+  const extendedLimit = depth > 1 ? Math.min(100, limit * 4) : limit;
   const [rootInfo, rootSimilar] = await Promise.all([
     fastify.lastfm.getArtistInfo(rootArtistName, fastify),
-    fastify.lastfm.getSimilarArtists(rootArtistName, limit, fastify)
+    fastify.lastfm.getSimilarArtists(rootArtistName, extendedLimit, fastify)
   ]);
   
+  // Create similarity lookup map for root artist
+  const rootSimilarityMap = new Map();
+  rootSimilar.similar.forEach(similar => {
+    rootSimilarityMap.set(similar.name.toLowerCase(), similar.match);
+  });
+  
   // Start with ONLY the root node
-  const nodes = [createArtistNode(rootInfo, true)];
+  const nodes = [createArtistNode(rootInfo, true, 0)];
   const edges = [];
   
   console.log(`📍 Root: ${rootInfo.name}`);
   console.log(`🎯 Found ${rootSimilar.similar.length} similar artists`);
   
-  // SIMPLE RULE: Only add nodes that connect DIRECTLY to root
-  for (const similar of rootSimilar.similar.slice(0, limit)) {
+  // PARALLEL PROCESSING: Get all 1st hop artist info at once
+  const firstHopLimit = Math.min(limit, rootSimilar.similar.length);
+  const firstHopPromises = rootSimilar.similar.slice(0, firstHopLimit).map(async (similar) => {
     try {
-      console.log(`⏳ Processing: ${similar.name}...`);
       const artistInfo = await fastify.lastfm.getArtistInfo(similar.name, fastify);
+      return { similar, artistInfo, success: true };
+    } catch (error) {
+      console.warn(`⚠️ Failed to get info for ${similar.name}: ${error.message}`);
+      return { similar, error, success: false };
+    }
+  });
+  
+  console.log(`⏳ Fetching ${firstHopPromises.length} 1st hop artists in parallel...`);
+  const firstHopResults = await Promise.all(firstHopPromises);
+  
+  // Add successful 1st hop results
+  const existingNames = new Set([rootInfo.name.toLowerCase()]);
+  firstHopResults.forEach(result => {
+    if (result.success && result.artistInfo.name.toLowerCase() !== rootInfo.name.toLowerCase()) {
+      nodes.push(createArtistNode(result.artistInfo, false, 1));
+      existingNames.add(result.artistInfo.name.toLowerCase());
       
-      // Skip if same as root
-      if (artistInfo.name === rootInfo.name) {
-        console.log(`⚠️ Skipped: ${similar.name} (same as root)`);
-        continue;
-      }
-      
-      // Add node
-      nodes.push(createArtistNode(artistInfo, false));
-      
-      // Add edge to root - GUARANTEED CONNECTION
+      // 1st hop: similarity is already relative to root
       edges.push({
-        id: `${rootInfo.name}->${artistInfo.name}`,
+        id: `${rootInfo.name}->${result.artistInfo.name}`,
         source: rootInfo.name,
-        target: artistInfo.name,
-        match: similar.match,
-        weight: similar.match
+        target: result.artistInfo.name,
+        match: result.similar.match,
+        weight: result.similar.match
       });
       
-      console.log(`✅ CONNECTED: ${rootInfo.name} → ${artistInfo.name} (${similar.match})`);
-      
-    } catch (error) {
-      console.warn(`⚠️ Failed to add ${similar.name}: ${error.message}`);
+      console.log(`✅ 1ST HOP: ${rootInfo.name} → ${result.artistInfo.name} (${result.similar.match})`);
     }
-  }
+  });
   
-  // For 2-hop, add NEW artists similar to 1-hop artists
+  // For 2-hop, add NEW artists similar to 1-hop artists with ROOT-RELATIVE similarity
   if (depth > 1) {
-    console.log(`🔄 Adding 2nd hop - NEW artists similar to 1-hop artists...`);
+    console.log(`🔄 Adding 2nd hop with ROOT-RELATIVE similarity...`);
     const firstHopArtists = nodes.filter(n => !n.isRoot).slice(0, 8); // Limit to prevent explosion
-    const existingNames = new Set(nodes.map(n => n.name));
     
-    for (const sourceNode of firstHopArtists) {
-      try {
-        console.log(`🔍 Finding artists similar to ${sourceNode.name}...`);
-        const similarData = await fastify.lastfm.getSimilarArtists(sourceNode.name, 5, fastify);
-        
-        for (const similar of similarData.similar.slice(0, 2)) { // Limit 2nd hop
-          try {
-            // Skip if root, existing, or same as source
-            if (similar.name === rootInfo.name || existingNames.has(similar.name) || similar.name === sourceNode.name) {
-              console.log(`⚠️ Skipped ${similar.name} - already exists or is root`);
-              continue;
-            }
-            
-            // Add NEW 2-hop artist
-            console.log(`⏳ Adding NEW 2-hop artist: ${similar.name}...`);
-            const artistInfo = await fastify.lastfm.getArtistInfo(similar.name, fastify);
-            
-            // Add the new node
-            nodes.push(createArtistNode(artistInfo, false));
-            existingNames.add(artistInfo.name);
-            
-            // Connect NEW artist to its 1-hop parent
-            edges.push({
-              id: `${sourceNode.name}->${artistInfo.name}`,
-              source: sourceNode.name,
-              target: artistInfo.name,
-              match: similar.match,
-              weight: similar.match
-            });
-            
-            console.log(`✅ 2ND HOP (NEW): ${sourceNode.name} → ${artistInfo.name} (${similar.match})`);
-            
-          } catch (error) {
-            console.warn(`⚠️ Failed to add 2nd hop ${similar.name}: ${error.message}`);
-          }
+    // Get similar artists for all 1st hop artists and take 1-2 from each for balanced distribution
+    const batchSize = 4;
+    const selectedSecondHopCandidates = [];
+    const globalSeenNames = new Set(); // Track globally to avoid duplicates across sources
+    
+    for (let i = 0; i < firstHopArtists.length; i += batchSize) {
+      const batch = firstHopArtists.slice(i, i + batchSize);
+      
+      const batchPromises = batch.map(async (sourceNode) => {
+        try {
+          const similarData = await fastify.lastfm.getSimilarArtists(sourceNode.name, 5, fastify);
+          return { sourceNode, similarData, success: true };
+        } catch (error) {
+          console.warn(`⚠️ Failed to get similar for ${sourceNode.name}: ${error.message}`);
+          return { sourceNode, error, success: false };
         }
-      } catch (error) {
-        console.warn(`⚠️ Failed to get similar artists for ${sourceNode.name}: ${error.message}`);
-      }
+      });
+      
+      console.log(`⏳ Processing 2nd hop batch ${Math.floor(i/batchSize) + 1}...`);
+      const batchResults = await Promise.all(batchPromises);
+      
+      // Take 1-2 unique candidates from each successful source
+      batchResults.forEach(result => {
+        if (result.success) {
+          let addedFromSource = 0;
+          const maxPerSource = 2; // Take up to 2 from each first-hop artist
+          
+          for (const similar of result.similarData.similar) {
+            if (addedFromSource >= maxPerSource) break;
+            
+            const similarNameLower = similar.name.toLowerCase();
+            const sourceNameLower = result.sourceNode.name.toLowerCase();
+            
+            // Skip if already exists globally or is the source itself
+            if (!existingNames.has(similarNameLower) && 
+                !globalSeenNames.has(similarNameLower) &&
+                similarNameLower !== sourceNameLower) {
+              
+              selectedSecondHopCandidates.push({
+                artistName: similar.name,
+                parentNode: result.sourceNode,
+                parentSimilarity: similar.match
+              });
+              
+              globalSeenNames.add(similarNameLower);
+              addedFromSource++;
+              
+              console.log(`🌐 Selected from ${result.sourceNode.name}: ${similar.name} (${similar.match.toFixed(3)})`);
+            }
+          }
+          
+          console.log(`📊 Added ${addedFromSource} artists from ${result.sourceNode.name}`);
+        }
+      });
     }
+    
+    console.log(`🎯 Selected ${selectedSecondHopCandidates.length} distributed 2nd hop candidates (1-2 per source)`);
+    
+    // Fetch artist info for selected 2nd hop candidates in parallel
+    const secondHopPromises = selectedSecondHopCandidates.map(async (candidate) => {
+      try {
+        const artistInfo = await fastify.lastfm.getArtistInfo(candidate.artistName, fastify);
+        
+        // Calculate ROOT-RELATIVE similarity
+        let rootSimilarity = rootSimilarityMap.get(artistInfo.name.toLowerCase());
+        
+        if (!rootSimilarity) {
+          // Artist not in root's top similar list, assign lower similarity based on path
+          // Use geometric mean of path similarities, capped at 0.5
+          rootSimilarity = Math.min(0.5, Math.sqrt(
+            rootSimilarityMap.get(candidate.parentNode.name.toLowerCase()) * candidate.parentSimilarity
+          ));
+          console.log(`📐 Calculated indirect similarity for ${artistInfo.name}: ${rootSimilarity.toFixed(3)}`);
+        } else {
+          console.log(`✅ Found direct similarity for ${artistInfo.name}: ${rootSimilarity}`);
+        }
+        
+        return { 
+          candidate, 
+          artistInfo, 
+          rootSimilarity,
+          success: true 
+        };
+      } catch (error) {
+        console.warn(`⚠️ Failed to get info for 2nd hop ${candidate.artistName}: ${error.message}`);
+        return { candidate, error, success: false };
+      }
+    });
+    
+    console.log(`⏳ Fetching ${secondHopPromises.length} 2nd hop artists in parallel...`);
+    const secondHopResults = await Promise.all(secondHopPromises);
+    
+    // Add successful 2nd hop results with ROOT-RELATIVE similarity
+    secondHopResults.forEach(result => {
+      if (result.success) {
+        // Add the new node
+        nodes.push(createArtistNode(result.artistInfo, false, 2));
+        existingNames.add(result.artistInfo.name.toLowerCase());
+        
+        // Connect to parent with original similarity
+        edges.push({
+          id: `${result.candidate.parentNode.name}->${result.artistInfo.name}`,
+          source: result.candidate.parentNode.name,
+          target: result.artistInfo.name,
+          match: result.candidate.parentSimilarity,
+          weight: result.candidate.parentSimilarity
+        });
+        
+        // ALSO connect directly to root with ROOT-RELATIVE similarity (if significant)
+        if (result.rootSimilarity > 0.1) {
+          edges.push({
+            id: `${rootInfo.name}->${result.artistInfo.name}_root`,
+            source: rootInfo.name,
+            target: result.artistInfo.name,
+            match: result.rootSimilarity,
+            weight: result.rootSimilarity
+          });
+          
+          console.log(`✅ 2ND HOP (ROOT-RELATIVE): ${rootInfo.name} → ${result.artistInfo.name} (${result.rootSimilarity.toFixed(3)})`);
+        } else {
+          console.log(`✅ 2ND HOP (INDIRECT): ${result.candidate.parentNode.name} → ${result.artistInfo.name} (${result.candidate.parentSimilarity.toFixed(3)})`);
+        }
+      }
+    });
   }
   
-  console.log(`🎯 SIMPLE RESULT: ${nodes.length} nodes, ${edges.length} edges`);
-  console.log(`📊 Every node (except root) has exactly 1+ edges to root!`);
+  console.log(`🎯 OPTIMIZED RESULT: ${nodes.length} nodes, ${edges.length} edges`);
+  console.log(`📊 All similarities are now relative to root: "${rootInfo.name}"`);
   
   return {
     nodes,
@@ -250,7 +344,7 @@ async function buildArtistGraph(rootArtistName, depth, limit, fastify) {
 }
 
 // Helper function to create a standardized artist node
-function createArtistNode(artistInfo, isRoot = false) {
+function createArtistNode(artistInfo, isRoot = false, hopLevel = 0) {
   // Determine primary genre from tags
   const primaryGenre = artistInfo.tags?.[0] || 'unknown';
   
@@ -272,6 +366,7 @@ function createArtistNode(artistInfo, isRoot = false) {
     primaryGenre,
     size,
     isRoot,
+    hopLevel, // 0 = root, 1 = first hop, 2 = second hop
     // Cytoscape.js specific properties
     data: {
       id: artistInfo.name,
@@ -280,7 +375,8 @@ function createArtistNode(artistInfo, isRoot = false) {
       tags: artistInfo.tags || [],
       primaryGenre,
       size,
-      isRoot
+      isRoot,
+      hopLevel
     }
   };
 }
