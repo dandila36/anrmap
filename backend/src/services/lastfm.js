@@ -185,6 +185,91 @@ class LastFmService {
       throw new Error(`Failed to fetch artist info: ${error.message}`);
     }
   }
+
+  async getArtistTopTracks(artistName, limit = 5, fastify) {
+    const cacheKey = `toptracks:${artistName.toLowerCase()}:${limit}`;
+    
+    // Try cache first
+    const cached = await this.getFromCache(cacheKey, fastify);
+    if (cached) {
+      return cached;
+    }
+
+    try {
+      const data = await this.makeRequest({
+        method: 'artist.gettoptracks',
+        artist: artistName,
+        limit: Math.min(limit, 50),
+        autocorrect: 1
+      });
+
+      if (data.error) {
+        throw new Error(data.message || 'Last.fm API error');
+      }
+
+      const tracks = data.toptracks?.track || [];
+      const result = (Array.isArray(tracks) ? tracks : [tracks]).slice(0, limit).map(track => ({
+        name: track.name,
+        playcount: parseInt(track.playcount || 0),
+        listeners: parseInt(track.listeners || 0),
+        url: track.url,
+        mbid: track.mbid,
+        image: track.image?.[2]?.['#text'] || ''
+      }));
+
+      // Cache for 24 hours
+      await this.setCache(cacheKey, result, fastify);
+      
+      return result;
+    } catch (error) {
+      if (error.response?.status === 429) {
+        throw { statusCode: 429, message: 'Rate limit exceeded' };
+      }
+      throw new Error(`Failed to fetch top tracks: ${error.message}`);
+    }
+  }
+
+  async getArtistTopAlbums(artistName, limit = 3, fastify) {
+    const cacheKey = `topalbums:${artistName.toLowerCase()}:${limit}`;
+    
+    // Try cache first
+    const cached = await this.getFromCache(cacheKey, fastify);
+    if (cached) {
+      return cached;
+    }
+
+    try {
+      const data = await this.makeRequest({
+        method: 'artist.gettopalbums',
+        artist: artistName,
+        limit: Math.min(limit, 50),
+        autocorrect: 1
+      });
+
+      if (data.error) {
+        throw new Error(data.message || 'Last.fm API error');
+      }
+
+      const albums = data.topalbums?.album || [];
+      const result = (Array.isArray(albums) ? albums : [albums]).slice(0, limit).map(album => ({
+        name: album.name,
+        playcount: parseInt(album.playcount || 0),
+        url: album.url,
+        mbid: album.mbid,
+        image: album.image?.[2]?.['#text'] || ''
+      }));
+
+      // Cache for 24 hours
+      await this.setCache(cacheKey, result, fastify);
+      
+      return result;
+    } catch (error) {
+      if (error.response?.status === 429) {
+        throw { statusCode: 429, message: 'Rate limit exceeded' };
+      }
+      throw new Error(`Failed to fetch top albums: ${error.message}`);
+    }
+  }
 }
 
 // Register as Fastify plugin

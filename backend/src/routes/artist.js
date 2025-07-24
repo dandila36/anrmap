@@ -16,16 +16,20 @@ async function artistRoutes(fastify, options) {
       const artistName = decodeURIComponent(request.params.id);
       
       // Get comprehensive artist information
-      const [artistInfo, similarData] = await Promise.all([
+      const [artistInfo, similarData, topTracks, topAlbums] = await Promise.all([
         fastify.lastfm.getArtistInfo(artistName, fastify),
-        fastify.lastfm.getSimilarArtists(artistName, 10, fastify)
+        fastify.lastfm.getSimilarArtists(artistName, 10, fastify),
+        fastify.lastfm.getArtistTopTracks(artistName, 5, fastify),
+        fastify.lastfm.getArtistTopAlbums(artistName, 3, fastify)
       ]);
       
       return {
         success: true,
         artist: {
           ...artistInfo,
-          similar: similarData.similar
+          similar: similarData.similar,
+          topTracks: topTracks,
+          topAlbums: topAlbums
         }
       };
       

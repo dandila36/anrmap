@@ -1,3 +1,20 @@
+export interface Track {
+  name: string;
+  playcount: number;
+  listeners: number;
+  url: string;
+  mbid: string;
+  image: string;
+}
+
+export interface Album {
+  name: string;
+  playcount: number;
+  url: string;
+  mbid: string;
+  image: string;
+}
+
 export interface ArtistNode {
   id: string;
   name: string;
@@ -10,6 +27,8 @@ export interface ArtistNode {
   primaryGenre: string;
   size: number;
   isRoot: boolean;
+  topTracks?: Track[];
+  topAlbums?: Album[];
   data?: {
     id: string;
     name: string;

@@ -251,54 +251,68 @@ const SideDrawer: React.FC<SideDrawerProps> = ({ artist, isOpen, onClose, onExpa
             </div>
           </div>
 
-          {/* Top Tracks */}
-          <div className="px-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
-              <TrendingUp className="w-5 h-5" />
-              <span>Top Tracks</span>
-            </h3>
-            <div className="space-y-3">
-              {/* Mock data for now - will be replaced with real API data later */}
-              {[1, 2, 3].map((index) => (
-                <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
-                    <span className="text-white text-sm font-bold">{index}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-900 truncate">
-                      Popular Track {index}
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      {formatNumber(Math.floor(Math.random() * 1000000))} plays
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                     {/* Top Tracks */}
+           {artist.topTracks && artist.topTracks.length > 0 && (
+             <div className="px-6 mb-6">
+               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+                 <TrendingUp className="w-5 h-5" />
+                 <span>Top Tracks</span>
+               </h3>
+               <div className="space-y-3">
+                 {artist.topTracks.slice(0, 3).map((track, index) => (
+                   <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                     <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                       <span className="text-white text-sm font-bold">{index + 1}</span>
+                     </div>
+                     <div className="flex-1 min-w-0">
+                       <div className="text-sm font-medium text-gray-900 truncate">
+                         {track.name}
+                       </div>
+                       <p className="text-xs text-gray-500">
+                         {formatNumber(track.playcount)} plays
+                       </p>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             </div>
+           )}
 
-          {/* Latest Release */}
-          <div className="px-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
-              <Award className="w-5 h-5" />
-              <span>Latest Release</span>
-            </h3>
-            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-              <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
-                  <Music className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-gray-900 truncate">
-                  Latest Album
-                </div>
-                <p className="text-xs text-gray-500">
-                  Recent release
-                </p>
-              </div>
-            </div>
-          </div>
+                     {/* Latest Release */}
+           {artist.topAlbums && artist.topAlbums.length > 0 && (
+             <div className="px-6 mb-6">
+               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+                 <Award className="w-5 h-5" />
+                 <span>Top Album</span>
+               </h3>
+               <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                 <div className="flex-shrink-0">
+                   {artist.topAlbums[0].image ? (
+                     <img 
+                       src={artist.topAlbums[0].image} 
+                       alt={artist.topAlbums[0].name}
+                       className="w-12 h-12 rounded-lg object-cover"
+                       onError={(e) => {
+                         (e.target as HTMLImageElement).style.display = 'none';
+                         (e.target as HTMLImageElement).nextElementSibling?.setAttribute('style', 'display: flex;');
+                       }}
+                     />
+                   ) : null}
+                   <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-lg flex items-center justify-center" style={{ display: artist.topAlbums[0].image ? 'none' : 'flex' }}>
+                     <Music className="w-6 h-6 text-white" />
+                   </div>
+                 </div>
+                 <div className="flex-1 min-w-0">
+                   <div className="text-sm font-medium text-gray-900 truncate">
+                     {artist.topAlbums[0].name}
+                   </div>
+                   <p className="text-xs text-gray-500">
+                     {formatNumber(artist.topAlbums[0].playcount)} plays
+                   </p>
+                 </div>
+               </div>
+             </div>
+           )}
 
           {/* Enhanced Genres */}
           {artist.tags && artist.tags.length > 0 && (
