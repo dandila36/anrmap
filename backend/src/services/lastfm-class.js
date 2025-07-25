@@ -19,7 +19,7 @@ class LastFmService {
     this.requestQueue = [];
     this.processing = false;
     this.lastRequestTime = 0;
-    this.minRequestInterval = 200; // 5 requests per second max
+    this.minRequestInterval = 300; // ~3.3 requests per second max
     
     console.log('✅ Last.fm service created successfully');
   }
@@ -57,7 +57,7 @@ class LastFmService {
             api_key: this.apiKey,
             format: 'json'
           },
-          timeout: 10000
+          timeout: 30000
         });
 
         this.lastRequestTime = Date.now();

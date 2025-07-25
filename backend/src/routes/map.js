@@ -48,6 +48,13 @@ async function mapRoutes(fastify, options) {
         });
       }
       
+      if (error.message.includes('timeout')) {
+        return reply.code(504).send({
+          error: 'Request Timeout',
+          message: 'Last.fm API is responding slowly. Please try again in a moment.'
+        });
+      }
+      
       if (error.message.includes('not found')) {
         return reply.code(404).send({
           error: 'Artist Not Found',
@@ -57,7 +64,7 @@ async function mapRoutes(fastify, options) {
       
       return reply.code(500).send({
         error: 'Internal Server Error',
-        message: 'Failed to build artist map'
+        message: 'Failed to build artist map. Please try again.'
       });
     }
   });

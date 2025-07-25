@@ -44,6 +44,10 @@ api.interceptors.response.use(
       throw new Error('Artist not found. Please check the spelling and try again.');
     }
     
+    if (error.response?.status === 504) {
+      throw new Error('Last.fm API is responding slowly. Please try again in a moment.');
+    }
+    
     if (error.code === 'ECONNABORTED') {
       throw new Error('Request timeout. Please try again.');
     }
