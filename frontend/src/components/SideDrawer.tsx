@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { 
   X, 
   Plus, 
@@ -8,7 +8,6 @@ import {
   Globe,
   Star,
   Zap,
-  Radio,
   Headphones,
   Award,
   Target
@@ -16,6 +15,33 @@ import {
 import { SideDrawerProps } from '../types';
 
 const SideDrawer: React.FC<SideDrawerProps> = ({ artist, isOpen, onClose, onExpand, graphData }) => {
+  const [spotifyImageUrl, setSpotifyImageUrl] = useState<string | null>(null);
+
+  // Fetch Spotify artist image when artist changes
+  useEffect(() => {
+    const fetchSpotifyImage = async () => {
+      if (artist && artist.name) {
+        try {
+          const response = await import('../services/api').then(m => 
+            m.apiService.spotify.getArtistImage(artist.name)
+          );
+          
+          if (response.success && response.imageUrl) {
+            setSpotifyImageUrl(response.imageUrl);
+          }
+        } catch (error) {
+          console.error('Failed to fetch Spotify image:', error);
+        }
+      }
+    };
+
+    if (artist) {
+      fetchSpotifyImage();
+    } else {
+      setSpotifyImageUrl(null);
+    }
+  }, [artist]);
+
   // Enhanced network analysis using graph data
   const networkInsights = useMemo(() => {
     if (!artist || !graphData) return null;
@@ -88,20 +114,31 @@ const SideDrawer: React.FC<SideDrawerProps> = ({ artist, isOpen, onClose, onExpa
     return null;
   }
 
-  const handleSpotifySearch = () => {
-    const query = encodeURIComponent(artist.name);
-    window.open(`https://open.spotify.com/search/${query}`, '_blank');
+  const handleSpotifySearch = async () => {
+    try {
+      // Get the correct Spotify URL for this artist
+      const response = await import('../services/api').then(m => 
+        m.apiService.spotify.getArtistUrl(artist.name)
+      );
+      
+      if (response.success && response.spotifyUrl) {
+        window.open(response.spotifyUrl, '_blank');
+      } else {
+        // Fallback to search URL
+        const query = encodeURIComponent(artist.name);
+        window.open(`https://open.spotify.com/search/${query}`, '_blank');
+      }
+    } catch (error) {
+      console.error('Failed to get Spotify URL:', error);
+      // Fallback to search URL
+      const query = encodeURIComponent(artist.name);
+      window.open(`https://open.spotify.com/search/${query}`, '_blank');
+    }
   };
 
   const handleYouTubeSearch = () => {
     const query = encodeURIComponent(`${artist.name} music`);
     window.open(`https://www.youtube.com/results?search_query=${query}`, '_blank');
-  };
-
-  const handleLastFmOpen = () => {
-    if (artist.url) {
-      window.open(artist.url, '_blank');
-    }
   };
 
   const handleExpandNode = () => {
@@ -172,9 +209,10 @@ const SideDrawer: React.FC<SideDrawerProps> = ({ artist, isOpen, onClose, onExpa
           {/* Artist Hero Section */}
           <div className="p-6 text-center">
             <div className="relative inline-block mb-4">
-              {artist.image ? (
+              {/* Artist image */}
+              {(spotifyImageUrl || artist.image) ? (
                 <img
-                  src={artist.image}
+                  src={spotifyImageUrl || artist.image}
                   alt={artist.name}
                   className="w-32 h-32 rounded-2xl mx-auto object-cover shadow-lg"
                   style={{
@@ -182,7 +220,12 @@ const SideDrawer: React.FC<SideDrawerProps> = ({ artist, isOpen, onClose, onExpa
                   }}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
+                    // If Spotify image fails, try fallback image
+                    if (spotifyImageUrl && target.src === spotifyImageUrl && artist.image) {
+                      target.src = artist.image;
+                    } else {
+                      target.style.display = 'none';
+                    }
                   }}
                 />
               ) : (
@@ -373,15 +416,7 @@ const SideDrawer: React.FC<SideDrawerProps> = ({ artist, isOpen, onClose, onExpa
               <span>Discover Similar Artists</span>
             </button>
 
-            <div className="grid grid-cols-3 gap-3">
-              <button
-                onClick={handleLastFmOpen}
-                className="flex flex-col items-center space-y-2 p-4 bg-red-50 hover:bg-red-100 text-red-700 rounded-xl transition-colors"
-              >
-                <Radio className="w-6 h-6" />
-                <span className="text-xs font-medium">Last.fm</span>
-              </button>
-              
+            <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={handleSpotifySearch}
                 className="flex flex-col items-center space-y-2 p-4 bg-green-50 hover:bg-green-100 text-green-700 rounded-xl transition-colors"

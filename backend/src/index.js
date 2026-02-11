@@ -59,6 +59,7 @@ fastify.register(async function (fastify) {
   await fastify.register(require('./routes/artist'));
   await fastify.register(require('./routes/map'));
   await fastify.register(require('./routes/export'));
+  await fastify.register(require('./routes/spotify'), { prefix: '/spotify' });
 }, { prefix: '/api' });
 
 // Check if services are available after registration

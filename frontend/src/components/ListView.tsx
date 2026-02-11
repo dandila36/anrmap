@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ExternalLink, Users, PlayCircle, Music } from 'lucide-react';
+import { ExternalLink, Users, PlayCircle } from 'lucide-react';
 import { GraphData, ArtistNode } from '../types';
 
 interface ListViewProps {
@@ -76,11 +76,6 @@ const ListView: React.FC<ListViewProps> = ({ data, onArtistSelect }) => {
   const getSpotifySearchUrl = (artistName: string) => {
     const query = encodeURIComponent(artistName);
     return `https://open.spotify.com/search/${query}`;
-  };
-
-  const getLastFmUrl = (artistName: string) => {
-    const query = encodeURIComponent(artistName.replace(/\s+/g, '+'));
-    return `https://www.last.fm/music/${query}`;
   };
 
   return (
@@ -195,16 +190,6 @@ const ListView: React.FC<ListViewProps> = ({ data, onArtistSelect }) => {
                     >
                       <PlayCircle className="w-4 h-4" />
                     </a>
-                    <a
-                      href={getLastFmUrl(artist.name)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded"
-                      title="View on Last.fm"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Music className="w-4 h-4" />
-                    </a>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -231,10 +216,6 @@ const ListView: React.FC<ListViewProps> = ({ data, onArtistSelect }) => {
             <div className="flex items-center gap-1">
               <PlayCircle className="w-4 h-4 text-green-600" />
               <span>Spotify</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Music className="w-4 h-4 text-red-600" />
-              <span>Last.fm</span>
             </div>
           </div>
         </div>

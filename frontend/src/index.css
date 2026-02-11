@@ -57,6 +57,13 @@
   background: #a8a8a8;
 }
 
+/* Graph background with subtle dot grid */
+.graph-bg {
+  background-color: #f8fafc;
+  background-image: radial-gradient(circle, #e2e8f0 0.8px, transparent 0.8px);
+  background-size: 24px 24px;
+}
+
 /* Graph container */
 .graph-container {
   position: relative;

@@ -22,10 +22,19 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
 
   const getNodeColorByHop = useCallback((hopLevel: number) => {
     switch (hopLevel) {
-      case 0: return '#2563EB'; // Blue for root
-      case 1: return '#DC2626'; // Red for 1st hop
-      case 2: return '#EAB308'; // Yellow for 2nd hop
-      default: return '#6C7B7F'; // Gray for unknown
+      case 0: return '#7c3aed'; // Violet for root
+      case 1: return '#0891b2'; // Cyan for 1st hop
+      case 2: return '#ea580c'; // Orange for 2nd hop
+      default: return '#94a3b8'; // Slate for unknown
+    }
+  }, []);
+
+  const getNodeBorderByHop = useCallback((hopLevel: number) => {
+    switch (hopLevel) {
+      case 0: return '#6d28d9';
+      case 1: return '#0e7490';
+      case 2: return '#c2410c';
+      default: return '#64748b';
     }
   }, []);
 
@@ -134,74 +143,113 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
             'width': 'data(size)',
             'height': 'data(size)',
             'background-color': (node: any) => getNodeColorByHop(node.data('hopLevel')),
+            'background-opacity': 0.92,
             'label': 'data(name)',
             'text-valign': 'bottom',
             'text-halign': 'center',
-            'text-margin-y': 8,
-            'font-size': '12px',
-            'font-weight': 'bold',
-            'color': '#333',
-            'text-outline-color': '#fff',
-            'text-outline-width': 2,
+            'text-margin-y': 10,
+            'font-size': '11px',
+            'font-weight': '500',
+            'color': '#1e293b',
+            'text-outline-color': '#ffffff',
+            'text-outline-width': 2.5,
+            'text-outline-opacity': 0.9,
             'text-wrap': 'ellipsis',
-            'text-max-width': '80px',
-            'border-width': (node: any) => node.data('isRoot') ? 4 : 2,
-            'border-color': (node: any) => node.data('isRoot') ? '#FFD700' : '#fff',
-            'overlay-opacity': 0
-          }
+            'text-max-width': '90px',
+            'border-width': 2.5,
+            'border-color': (node: any) => getNodeBorderByHop(node.data('hopLevel')),
+            'border-opacity': 0.6,
+            'underlay-color': (node: any) => getNodeColorByHop(node.data('hopLevel')),
+            'underlay-padding': 6,
+            'underlay-opacity': 0.08,
+            'underlay-shape': 'ellipse',
+            'overlay-opacity': 0,
+            'transition-property': 'border-width, border-opacity, underlay-opacity, underlay-padding, background-opacity',
+            'transition-duration': '0.2s'
+          } as any
+        },
+        {
+          selector: 'node[?isRoot]',
+          style: {
+            'border-width': 4,
+            'border-color': '#7c3aed',
+            'border-opacity': 0.9,
+            'underlay-padding': 12,
+            'underlay-opacity': 0.12,
+            'font-size': '13px',
+            'font-weight': '700',
+            'z-index': 10
+          } as any
         },
         {
           selector: 'node:selected',
           style: {
-            'border-width': 4,
-            'border-color': '#007BFF',
-            'overlay-opacity': 0.2,
-            'overlay-color': '#007BFF'
-          }
+            'border-width': 3.5,
+            'border-opacity': 1,
+            'underlay-opacity': 0.18,
+            'underlay-padding': 10,
+            'overlay-opacity': 0
+          } as any
         },
         {
-          selector: 'node:hover',
+          selector: 'node:active',
           style: {
-            'overlay-opacity': 0.1,
-            'overlay-color': '#333'
+            'overlay-opacity': 0.06,
+            'overlay-color': '#475569'
           }
         },
         {
           selector: 'edge',
           style: {
-            'width': (edge: any) => Math.max(1, edge.data('weight') * 3),
-            'line-color': '#E0E0E0',
-            'opacity': 0.7,
-            'curve-style': 'bezier',
-            'target-arrow-shape': 'none'
-          }
+            'width': (edge: any) => Math.max(0.75, edge.data('weight') * 4),
+            'line-color': (edge: any) => {
+              const w = edge.data('weight') || 0;
+              if (w > 0.7) return '#7c3aed';
+              if (w > 0.4) return '#94a3b8';
+              return '#cbd5e1';
+            },
+            'opacity': (edge: any) => {
+              const w = edge.data('weight') || 0;
+              return Math.max(0.25, Math.min(0.85, w * 1.2));
+            },
+            'curve-style': 'unbundled-bezier',
+            'control-point-distances': 20,
+            'control-point-weights': 0.5,
+            'target-arrow-shape': 'none',
+            'line-cap': 'round',
+            'transition-property': 'line-color, opacity, width',
+            'transition-duration': '0.2s'
+          } as any
         },
         {
           selector: 'edge:hover',
           style: {
-            'line-color': '#007BFF',
-            'opacity': 1
-          }
+            'line-color': '#7c3aed',
+            'opacity': 1,
+            'width': (edge: any) => Math.max(2, edge.data('weight') * 5),
+            'z-index': 10
+          } as any
         }
       ],
       layout: {
         name: 'cose-bilkent',
         fit: true,
-        padding: 60,
-        idealEdgeLength: 120,
-        edgeElasticity: 0.45,
+        padding: 80,
+        idealEdgeLength: 150,
+        edgeElasticity: 0.4,
         nestingFactor: 0.1,
-        gravity: 0.25,
+        gravity: 0.2,
         numIter: 2500,
         tile: true,
         animate: 'end',
-        animationDuration: 1000,
-        tilingPaddingVertical: 25,
-        tilingPaddingHorizontal: 25,
-        nodeRepulsion: 8000,
+        animationDuration: 800,
+        animationEasing: 'ease-out',
+        tilingPaddingVertical: 30,
+        tilingPaddingHorizontal: 30,
+        nodeRepulsion: 10000,
         nodeDimensionsIncludeLabels: true
       } as any,
-      wheelSensitivity: 0.8,
+      wheelSensitivity: 0.6,
       minZoom: 0.2,
       maxZoom: 5
     });
@@ -231,18 +279,30 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
         tooltip.remove();
       }
 
+      const hopLevel = nodeData.hopLevel || 0;
+      const accentColor = hopLevel === 0 ? '#7c3aed' : hopLevel === 1 ? '#0891b2' : '#ea580c';
+
       tooltip = document.createElement('div');
-      tooltip.className = 'absolute z-50 bg-gray-900 text-white text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-none';
-      tooltip.style.left = `${renderedPosition.x + 10}px`;
-      tooltip.style.top = `${renderedPosition.y - 10}px`;
-      
+      tooltip.className = 'absolute z-50 pointer-events-none';
+      tooltip.style.left = `${renderedPosition.x + 14}px`;
+      tooltip.style.top = `${renderedPosition.y - 14}px`;
+
       const listeners = nodeData.listeners?.toLocaleString() || 'Unknown';
       const tags = nodeData.tags?.slice(0, 3).join(', ') || 'No genres';
-      
+      const hopLabel = hopLevel === 0 ? 'Root' : hopLevel === 1 ? '1st hop' : '2nd hop';
+
       tooltip.innerHTML = `
-        <div class="font-semibold">${nodeData.name}</div>
-        <div class="text-xs text-gray-300">${listeners} listeners</div>
-        <div class="text-xs text-gray-300">${tags}</div>
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06); min-width: 160px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <div style="width: 8px; height: 8px; border-radius: 50%; background: ${accentColor}; flex-shrink: 0;"></div>
+            <div style="font-weight: 600; font-size: 13px; color: #0f172a;">${nodeData.name}</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 3px; padding-left: 16px;">
+            <div style="font-size: 11px; color: #64748b;">${listeners} listeners</div>
+            <div style="font-size: 11px; color: #64748b;">${tags}</div>
+            <div style="font-size: 10px; color: ${accentColor}; font-weight: 500; margin-top: 2px;">${hopLabel}</div>
+          </div>
+        </div>
       `;
 
       containerRef.current?.appendChild(tooltip);
@@ -256,7 +316,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
     });
 
     cyRef.current = cy;
-  }, [data, onNodeSelect, getNodeColorByHop]);
+  }, [data, onNodeSelect, getNodeColorByHop, getNodeBorderByHop]);
 
   // Initialize Cytoscape
   useEffect(() => {
@@ -286,19 +346,20 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
         nodeDimensionsIncludeLabels: true,
         refresh: 20,
         fit: true,
-        padding: 60,
+        padding: 80,
         randomize: false,
-        nodeRepulsion: 8000,
-        idealEdgeLength: 120,
-        edgeElasticity: 0.45,
+        nodeRepulsion: 10000,
+        idealEdgeLength: 150,
+        edgeElasticity: 0.4,
         nestingFactor: 0.1,
-        gravity: 0.25,
+        gravity: 0.2,
         numIter: 2500,
         tile: true,
         animate: 'end',
-        animationDuration: 1000,
-        tilingPaddingVertical: 25,
-        tilingPaddingHorizontal: 25
+        animationDuration: 800,
+        animationEasing: 'ease-out',
+        tilingPaddingVertical: 30,
+        tilingPaddingHorizontal: 30
       } as any).run();
     }
   }, [data, transformDataToCytoscape]);
@@ -318,15 +379,34 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
   }, [selectedArtist]);
 
   return (
-    <div className="w-full h-full relative bg-white">
+    <div className="w-full h-full relative graph-bg">
       <div ref={containerRef} className="w-full h-full graph-container" />
-      
+
+      {/* Hop Legend */}
+      {!isEmpty && !isLoading && (
+        <div className="absolute bottom-4 right-4 z-10 flex items-center gap-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg px-3 py-2 shadow-sm">
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-[#7c3aed]" />
+            <span className="text-[10px] font-medium text-slate-500">Root</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-[#0891b2]" />
+            <span className="text-[10px] font-medium text-slate-500">1st hop</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-[#ea580c]" />
+            <span className="text-[10px] font-medium text-slate-500">2nd hop</span>
+          </div>
+        </div>
+      )}
+
       {/* Loading Overlay */}
       {isLoading && (
-        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
-          <div className="text-center">
-            <div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-            <p className="text-gray-600">Building artist network<span className="loading-dots"></span></p>
+        <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-10">
+          <div className="text-center bg-white rounded-2xl shadow-lg border border-slate-100 px-8 py-6">
+            <div className="w-10 h-10 border-[3px] border-violet-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+            <p className="text-sm font-medium text-slate-700">Building artist network<span className="loading-dots"></span></p>
+            <p className="text-xs text-slate-400 mt-1">Discovering connections</p>
           </div>
         </div>
       )}
@@ -334,14 +414,19 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({
       {/* Empty State */}
       {isEmpty && !isLoading && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center text-gray-500">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          <div className="text-center max-w-xs">
+            <div className="w-20 h-20 bg-gradient-to-br from-violet-50 to-cyan-50 rounded-2xl flex items-center justify-center mx-auto mb-5 border border-slate-100">
+              <svg className="w-9 h-9 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="3" strokeWidth={2} />
+                <circle cx="4" cy="8" r="2" strokeWidth={1.5} />
+                <circle cx="20" cy="8" r="2" strokeWidth={1.5} />
+                <circle cx="6" cy="18" r="2" strokeWidth={1.5} />
+                <circle cx="18" cy="18" r="2" strokeWidth={1.5} />
+                <path strokeLinecap="round" strokeWidth={1.5} d="M9.5 10.5L5.5 8.5M14.5 10.5L18.5 8.5M10 14l-3 3M14 14l3 3" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium mb-2">No Artist Map Yet</h3>
-            <p className="text-sm">Enter a Last.fm URL or artist name above to create your first network visualization.</p>
+            <h3 className="text-base font-semibold text-slate-800 mb-1.5">No Artist Map Yet</h3>
+            <p className="text-sm text-slate-400 leading-relaxed">Enter an artist name above to create your first network visualization.</p>
           </div>
         </div>
       )}

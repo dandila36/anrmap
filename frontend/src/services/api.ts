@@ -3,8 +3,12 @@ import {
   MapApiResponse,
   ExpandApiResponse,
   SearchApiResponse,
-  LastFmArtist,
-  ApiError
+  ArtistDetail,
+  ApiError,
+  SpotifyAuthResponse,
+  SpotifyPlaylistResponse,
+  SpotifyArtistUrlResponse,
+  SpotifyArtistImageResponse
 } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
@@ -45,7 +49,7 @@ api.interceptors.response.use(
     }
     
     if (error.response?.status === 504) {
-      throw new Error('Last.fm API is responding slowly. Please try again in a moment.');
+      throw new Error('API is responding slowly. Please try again in a moment.');
     }
     
     if (error.code === 'ECONNABORTED') {
@@ -75,7 +79,7 @@ export const apiService = {
   },
 
   // Get individual artist information
-  getArtist: async (artistId: string): Promise<LastFmArtist> => {
+  getArtist: async (artistId: string): Promise<ArtistDetail> => {
     const response = await api.get(`/artist/${encodeURIComponent(artistId)}`);
     return response.data.artist;
   },
@@ -107,6 +111,43 @@ export const apiService = {
   healthCheck: async (): Promise<{ ok: boolean; timestamp: string }> => {
     const response = await api.get('/healthz');
     return response.data;
+  },
+
+  // Spotify API calls
+  spotify: {
+    // Get Spotify authorization URL
+    getAuthUrl: async (): Promise<SpotifyAuthResponse> => {
+      const response = await api.get('/spotify/auth');
+      return response.data;
+    },
+
+    // Create playlist from artist list
+    createPlaylist: async (
+      accessToken: string, 
+      artists: string[], 
+      playlistName?: string, 
+      trackType: 'popular' | 'recent' = 'popular'
+    ): Promise<SpotifyPlaylistResponse> => {
+      const response = await api.post('/spotify/create-playlist', {
+        accessToken,
+        artists,
+        playlistName,
+        trackType
+      });
+      return response.data;
+    },
+
+    // Get correct Spotify URL for an artist
+    getArtistUrl: async (artistName: string): Promise<SpotifyArtistUrlResponse> => {
+      const response = await api.get(`/spotify/artist-url/${encodeURIComponent(artistName)}`);
+      return response.data;
+    },
+
+    // Get artist image from Spotify
+    getArtistImage: async (artistName: string): Promise<SpotifyArtistImageResponse> => {
+      const response = await api.get(`/spotify/artist-image/${encodeURIComponent(artistName)}`);
+      return response.data;
+    }
   }
 };
 
@@ -122,8 +163,8 @@ export const downloadBlob = (blob: Blob, filename: string) => {
   window.URL.revokeObjectURL(url);
 };
 
-export const parseLastFmUrl = (input: string): string => {
-  // Handle Last.fm URLs
+export const parseArtistInput = (input: string): string => {
+  // Handle URL formats
   const urlMatch = input.match(/last\.fm\/music\/([^/?]+)/i);
   if (urlMatch) {
     return decodeURIComponent(urlMatch[1]).replace(/\+/g, ' ');

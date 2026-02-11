@@ -13,7 +13,7 @@ const InputBar: React.FC<InputBarProps> = ({ onGraphData, onLoadingChange, isLoa
     e.preventDefault();
     
     if (!input.trim()) {
-      toast.error('Please enter a Last.fm URL or artist name');
+      toast.error('Please enter an artist name');
       return;
     }
 
@@ -43,8 +43,8 @@ const InputBar: React.FC<InputBarProps> = ({ onGraphData, onLoadingChange, isLoa
   }, []);
 
   const examples = [
-    'https://www.last.fm/music/Billie+Eilish',
-    'https://www.last.fm/music/Radiohead',
+    'Billie Eilish',
+    'Radiohead',
     'Taylor Swift',
     'Daft Punk',
     'Arctic Monkeys'
@@ -61,7 +61,7 @@ const InputBar: React.FC<InputBarProps> = ({ onGraphData, onLoadingChange, isLoa
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Enter Last.fm URL or artist name..."
+              placeholder="Enter artist name..."
               className="input pl-11"
               disabled={isLoading}
             />
@@ -130,7 +130,7 @@ const InputBar: React.FC<InputBarProps> = ({ onGraphData, onLoadingChange, isLoa
       {/* Help Text */}
       <div className="mt-4 text-sm text-gray-600">
         <p>
-          Paste a <strong>Last.fm artist URL</strong> or type an <strong>artist name</strong>.
+          Type an <strong>artist name</strong>.
           The app will find similar artists and create an interactive network visualization.
         </p>
       </div>

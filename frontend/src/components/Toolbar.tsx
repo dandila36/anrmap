@@ -1,9 +1,10 @@
 import React, { useState, useCallback } from 'react';
-import { Download, FileText, Image, Filter, Sliders, Grid3X3, List } from 'lucide-react';
+import { Download, FileText, Image, Filter, Sliders, Grid3X3, List, Music } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { ToolbarProps } from '../types';
 import { apiService, downloadBlob } from '../services/api';
 import html2canvas from 'html2canvas';
+import SpotifyPlaylistCreator from './SpotifyPlaylistCreator';
 
 const Toolbar: React.FC<ToolbarProps> = ({ 
   filters, 
@@ -15,6 +16,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
 
   const handleSimilarityChange = useCallback((value: number) => {
     onFiltersChange({ minSimilarity: value });
@@ -118,6 +120,16 @@ const Toolbar: React.FC<ToolbarProps> = ({
             </button>
           </div>
         )}
+
+        {/* Spotify Playlist Creation */}
+        <button
+          onClick={() => setIsPlaylistModalOpen(true)}
+          className="btn btn-ghost p-2 bg-green-50 hover:bg-green-100 text-green-700"
+          title="Create Spotify playlist"
+          disabled={graphData.nodes.length === 0}
+        >
+          <Music className="w-4 h-4" />
+        </button>
 
         {/* Filters Toggle */}
         <button
@@ -269,6 +281,14 @@ const Toolbar: React.FC<ToolbarProps> = ({
             </div>
           )}
         </div>
+      )}
+
+      {/* Spotify Playlist Modal */}
+      {isPlaylistModalOpen && (
+        <SpotifyPlaylistCreator
+          graphData={graphData}
+          onClose={() => setIsPlaylistModalOpen(false)}
+        />
       )}
     </div>
   );

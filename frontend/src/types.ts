@@ -79,7 +79,7 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
-export interface LastFmArtist {
+export interface ArtistDetail {
   name: string;
   listeners: number;
   playcount: number;
@@ -189,6 +189,52 @@ export interface ToolbarProps {
   graphData: GraphData;
   viewMode?: 'graph' | 'list';
   onViewModeChange?: (mode: 'graph' | 'list') => void;
+}
+
+// Spotify Integration Types
+export interface SpotifyAuthResponse {
+  success: boolean;
+  authUrl: string;
+  state: string;
+}
+
+export interface SpotifyTrack {
+  uri: string;
+  name: string;
+  external_urls: {
+    spotify: string;
+  };
+}
+
+export interface SpotifyPlaylistResponse {
+  success: boolean;
+  playlist: {
+    id: string;
+    name: string;
+    url: string;
+    tracksAdded: number;
+    totalArtists: number;
+    trackType: string;
+  };
+  tracks: Array<{
+    artist: string;
+    trackName: string;
+    trackUrl: string;
+    releaseDate?: string;
+    trackType: string;
+  }>;
+}
+
+export interface SpotifyArtistUrlResponse {
+  success: boolean;
+  artist: string;
+  spotifyUrl: string;
+}
+
+export interface SpotifyArtistImageResponse {
+  success: boolean;
+  artist: string;
+  imageUrl: string | null;
 }
 
 // Error Types

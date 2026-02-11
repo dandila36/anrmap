@@ -1,5 +1,5 @@
 {
-  "name": "similar-artists-mapper",
+  "name": "galaxy",
   "version": "1.0.0",
   "description": "Interactive network map of musically similar artists using Last.fm data",
   "main": "index.js",
